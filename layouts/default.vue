@@ -1,8 +1,17 @@
-<template>
-  <div>
-    <nuxt/>
-  </div>
+<template lang="pug">
+  div
+    HeaderItem
+    nuxt
 </template>
+<script>
+import HeaderItem from '~/components/HeaderItem.vue'
+
+export default {
+  components: {
+    HeaderItem
+  }
+}
+</script>
 
 <style>
 html {
