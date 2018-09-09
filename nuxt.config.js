@@ -41,17 +41,28 @@ module.exports = {
         'test-sw.js'
     ]
   },
-  runtimeCaching: [{
-    // To match cross-origin requests, use a RegExp that matches
-    // the start of the origin:
-    urlPattern: new RegExp('^http://localhost:1337/.*'),
-    handler: 'staleWhileRevalidate',
+  runtimeCaching: [
+    {
+      // To match cross-origin requests, use a RegExp that matches
+      // the start of the origin:
+      urlPattern: new RegExp('^http://localhost:1337/.*'),
+      handler: 'datafromserver',
+      options: {
+        cacheableResponse: {
+          statuses: [0, 200]
+        }
+      }
+   },
+   {
+    urlPattern: new RegExp('^https://api.tiles.mapbox.com/.*'),
+    handler: 'mapimgdata',
     options: {
       cacheableResponse: {
         statuses: [0, 200]
       }
     }
-  }],
+   }
+],
   /*
   ** Customize the progress bar color
   */

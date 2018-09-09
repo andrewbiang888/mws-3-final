@@ -209,6 +209,7 @@ nav h1 a {
   border-bottom-left-radius: 30px;
   overflow: hidden;
   transition: all .2s ease-in-out;
+
 }
 #restaurants-list li:hover {
   box-shadow: 0 20px 10px 10px rgba(50,50,93,.1), 0 20px 10px rgba(0,0,0,.07);

@@ -1,5 +1,6 @@
 import idb from 'idb'
-export default function ({query, store}) {
+export default async function ({query, store}) {
+  let returnedRestaurantData = null
   let dbPromise = idb.open('restaurant-db', 1, (upgradeDb) => {
     switch (upgradeDb.oldVersion) {
       case 0:
@@ -16,46 +17,56 @@ export default function ({query, store}) {
   }).catch(error => {
     console.log('%c' + error, 'background: red;')
   })
-  dbPromise.then( db => {
+
+  let returnData = await dbPromise.then( db => {
     let tx = db.transaction("restaurants", "readwrite")
     let dbstore = tx.objectStore("restaurants")
-    dbstore.get('all').then( allRestaurants => {
-      if (!allRestaurants) {
-        fetch(process.env.SERVERURL+ 'restaurants', {method: "GET"}).then( response => {
-          response.json().then( restaurants => {
-            if (restaurants.length) {
-              // Get all neighborhoods from all restaurants
-              // const neighborhoods = restaurants.map((v, i) => restaurants[i].neighborhood);
-              // Remove duplicates from neighborhoods
-              // fetchedNeighborhoods = neighborhoods.filter((v, i) => neighborhoods.indexOf(v) == i);
+    return dbstore.get('all').then( async allRestaurants => {
 
-              // Get all cuisines from all restaurants
-              // const cuisines = restaurants.map((v, i) => restaurants[i].cuisine_type);
-              // Remove duplicates from cuisines
-              // fetchedCuisines = cuisines.filter((v, i) => cuisines.indexOf(v) == i);
-              store.dispatch('setRestaurants', restaurants)
-            }
-            console.log(`%c First Fetch`, 'background: green; color: white; padding: 10px;', restaurants)
-            dbPromise.then( db => {
-                db.transaction("restaurants", "readwrite").objectStore("restaurants").put({
-                id: 'all',
-                data: restaurants
+      if (!allRestaurants) {
+        /* START FETCH */
+        let fetchData = await fetch(process.env.SERVERURL + 'restaurants', {method: "GET"}).then( response =>
+          response.json().then( async restaurants => {
+            if (restaurants.length) {
+              returnedRestaurantData = await restaurants
+              console.log(`%c First Fetch`, 'background: green; color: white; padding: 10px;', restaurants)
+              dbPromise.then( dbb => {
+                  dbb.transaction("restaurants", "readwrite").objectStore("restaurants").put({
+                  id: 'all',
+                  data: returnedRestaurantData
+                })
+              }).catch(error => {
+                console.log('%c' + error, 'background: red;')
               })
-            })
+              return returnedRestaurantData
+              // store.dispatch('setRestaurants', returnedRestaurantData)
+            } else {
+              console.log('%c [PLUGIN] no length on fetch ' + error, 'background: red;')
+              return ['fetch data', 'was not an array']
+              // store.dispatch('setRestaurants', null)
+            }
           })
-        }).catch(error => {
-          console.log('%c' + error, 'background: red;')
+        ).catch(error => {
+          console.log('%c FETCH ERR' + error, 'background: red;')
         })
+        console.log({fetchData})
+        return fetchData
+      /* END FETCH */
       } else {
-        store.dispatch('setRestaurants', allRestaurants.data)
-        console.log({allRestaurants})
+        if (allRestaurants.data.length) {
+          returnedRestaurantData = allRestaurants.data
+          console.log({returnedRestaurantData})
+          return returnedRestaurantData
+          // store.dispatch('setRestaurants', returnedRestaurantData)
+        } else {
+          return ['existing data in db', 'is not array']
+        }
       }
     })
-  }).catch(error => {
+    // return tx.complete
+  }).catch( error => {
+    console.log('ERROR WITH DB FETCH IN PLUGIN')
     console.log('%c' + error, 'background: red;')
   })
-  console.log('globals', process.env.SERVERURL)
-  console.log('get query query', query)
-  store.dispatch('setRestaurants', [])
-  console.log('[PLUGIN] Fetching data if it does not exist', store)
+  store.dispatch('setRestaurants', returnData)
 }

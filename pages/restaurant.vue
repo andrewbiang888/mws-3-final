@@ -1,7 +1,7 @@
 <template lang='pug'>
   div
-    h1 restaurant
-    nuxt-link(to="/") home
+    section#restaurant-container
+      h2#restaurant-name {{currentRestaurant.name}}
 </template>
 <script>
   export default {
@@ -12,6 +12,15 @@
     },
     methods: {
 
+    },
+    computed: {
+      currentRestaurant () {
+        let self = this
+        let currentRestaurant = self.$store.state.restaurants.filter( restaurant => restaurant.id == self.$store.state.page)
+        return currentRestaurant[0]
+      }
+    },
+    beforeMount () {
     }
   }
 </script>
