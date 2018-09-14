@@ -25,6 +25,7 @@ module.exports = {
   ],
   plugins: [
     '~/plugins/restaurantfetch.js',
+    {src: '~/plugins/forceload.js', ssr: false}
   ],
   router: {
     middleware: ['pages']
@@ -39,30 +40,39 @@ module.exports = {
   workbox: {
     importScripts: [
         'test-sw.js'
-    ]
-  },
-  runtimeCaching: [
-    {
-      // To match cross-origin requests, use a RegExp that matches
-      // the start of the origin:
-      urlPattern: new RegExp('^http://localhost:1337/.*'),
-      handler: 'datafromserver',
-      options: {
-        cacheableResponse: {
-          statuses: [0, 200]
+    ],
+    runtimeCaching: [
+      {
+        // To match cross-origin requests, use a RegExp that matches
+        // the start of the origin:
+        urlPattern: new RegExp('^http://localhost:1337/.*'),
+        // handler: 'datafromserver',
+        strategyOptions: {
+          cacheableResponse: {
+            statuses: [0, 200]
+          }
+        }
+      },
+      {
+        urlPattern: new RegExp('^https://api.tiles.mapbox.com/.*'),
+        // handler: 'mapimgdata',
+        strategyOptions: {
+          cacheableResponse: {
+            statuses: [0, 200]
+          }
+        }
+      },
+      {
+        urlPattern: new RegExp('^http://localhost:3333/img/.*'),
+        handler: 'cacheFirst',
+        method: 'GET',
+        strategyOptions: {
+          cacheName: 'images',
+          cacheableResponse: { statuses: [0, 200, 304] }
         }
       }
-   },
-   {
-    urlPattern: new RegExp('^https://api.tiles.mapbox.com/.*'),
-    handler: 'mapimgdata',
-    options: {
-      cacheableResponse: {
-        statuses: [0, 200]
-      }
-    }
-   }
-],
+    ]
+  },
   /*
   ** Customize the progress bar color
   */

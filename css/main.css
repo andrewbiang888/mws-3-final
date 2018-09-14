@@ -67,7 +67,6 @@ section {
 }
 
 #maincontent {
-  background-color: #f3f3f3;
   min-height: 100%;
   display: flex;
   flex-direction: column;
@@ -388,7 +387,8 @@ h3 {
   padding: 0;
 }
 
-#reviews-list li {
+#reviews-list li,
+.review-entry {
   background-color: #fff;
   border: 2px solid #f3f3f3;
   display: block;
@@ -397,6 +397,10 @@ h3 {
   overflow: hidden;
   padding: 20px 40px 40px;
   position: relative;
+}
+.review-entry div label {
+  display: flex;
+  flex-direction: column;
 }
 
 #reviews-list li p {

@@ -69,4 +69,5 @@ export default async function ({query, store}) {
     console.log('%c' + error, 'background: red;')
   })
   store.dispatch('setRestaurants', returnData)
+  store.dispatch('isLoading', false)
 }

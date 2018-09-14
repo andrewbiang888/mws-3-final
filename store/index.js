@@ -1,3 +1,6 @@
+import idb from 'idb'
+import Vue from 'vue'
+
 export const state = () => ({
   isLoading: true,
   restaurants: null,
@@ -7,11 +10,12 @@ export const getters = {
   isLoading (state) {
     return state.isLoading
   },
-  getRestaurants (state) {
-    return state.getRestaurants
+  async restaurants (state) {
+    let resp = await state.restaurants
+    return resp
   },
-  getPage (state) {
-    return state.getPage
+  page (state) {
+    return state.page
   }
 }
 export const actions = {
@@ -19,13 +23,31 @@ export const actions = {
     commit('isLoading', newstate)
   },
   async setRestaurants ({commit}, existingData) {
-    // compare data or just fetch new stuff? idk
+
     let restaurantData = existingData
     commit('setRestaurants', restaurantData)
   },
   async setPage ({commit}, newpage) {
-    // compare data or just fetch new stuff? idk
+
     commit('setPage', newpage)
+  },
+  async updateRestaurantData ({commit, state}, {id, currentkey, newstate}) {
+    let index = state.restaurants.findIndex( restaurant => {
+      return restaurant.id == id
+    })
+    let newRestaurantData = state.restaurants.filter( restaurant => restaurant.id == id)[0]
+    newRestaurantData[currentkey] = newstate
+    // console.log({index, newRestaurantData})
+    // 1) save data in pending if not connected to the internet
+    if (navigator.onLine) {
+
+      console.log('[STORE] online')
+      commit('updateRestaurantData', {id, index, currentkey, newstate, newRestaurantData})
+    } else {
+      console.log('[STORE] not online')
+    }
+    // 2) undate global state object
+    // 3) update in database
   }
 }
 export const mutations = {
@@ -37,5 +59,11 @@ export const mutations = {
   },
   setPage(state, newpage) {
     state.page = newpage
+  },
+  updateRestaurantData(state, {id, index, currentkey, newstate, newRestaurantData}) {
+    let arr = state.restaurants.map( obj => obj.id == id ? newRestaurantData : obj)
+    // console.log({arr, index, currentkey, newstate, newRestaurantData})
+    // Vue.set(state, 'restaurants', arr )
+    state.restaurants = [...arr]
   }
 }

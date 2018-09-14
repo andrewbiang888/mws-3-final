@@ -1,5 +1,6 @@
 <template lang="pug">
-  div
+transition(name="pagetran" mode="out-in")
+  div(v-if="!$store.state.isLoading")
     HeaderItem
     nuxt
 </template>
