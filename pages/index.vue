@@ -140,7 +140,7 @@ export default {
       })
     },
     changeFavoriteState (id, oldstate) {
-      let newRestaurantData = this.filteredList.filter( restaurant => restaurant.id == id)[0]
+      // let newRestaurantData = this.filteredList.filter( restaurant => restaurant.id == id)[0]
       let newstate = oldstate === false || oldstate === 'false' ? true : false
       let currentkey = "is_favorite"
       // newRestaurantData[currentkey] = newstate

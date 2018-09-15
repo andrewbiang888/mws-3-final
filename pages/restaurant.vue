@@ -6,8 +6,8 @@ div
         div(style="position: relative;")
           h2#restaurant-name {{currentRestaurant.name}}
           div.favorite-icon
-            button(:id="'favorite-icon' + currentRestaurant.id" v-if="currentRestaurant.is_favorite === true || currentRestaurant.is_favorite === 'true'" style="background: url('/img/icons/filled-fav-icon.svg') no-repeat;") {{currentRestaurant.name}} is a favorite
-            button(:id="'favorite-icon' + currentRestaurant.id" v-if="currentRestaurant.is_favorite === false || currentRestaurant.is_favorite === 'false'" style="background: url('/img/icons/fav-icon.svg') no-repeat;") {{currentRestaurant.name}} is not a favorite
+            button(:id="'favorite-icon' + currentRestaurant.id" @click="changeFavoriteState(currentRestaurant.id, currentRestaurant.is_favorite)" v-if="currentRestaurant.is_favorite === true || currentRestaurant.is_favorite === 'true'" style="background: url('/img/icons/filled-fav-icon.svg') no-repeat;") {{currentRestaurant.name}} is a favorite
+            button(:id="'favorite-icon' + currentRestaurant.id" @click="changeFavoriteState(currentRestaurant.id, currentRestaurant.is_favorite)" v-if="currentRestaurant.is_favorite === false || currentRestaurant.is_favorite === 'false'" style="background: url('/img/icons/fav-icon.svg') no-repeat;") {{currentRestaurant.name}} is not a favorite
         img#restaurant-img(src="data:image/png;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=" :data-src="'/img/tiles/' + currentRestaurant.id + '_1x.jpg'" :data-srcset="'/img/tiles/' + currentRestaurant.id + '_1x.jpg 300w, /img/tiles/' + currentRestaurant.id + '_2x.jpg 600w'" :alt="currentRestaurant.name + ' currentRestaurant promotion'")
         p#restaurant-cuisine {{currentRestaurant.cuisine_type}}
       section#restaurant-address-and-hours
@@ -134,6 +134,15 @@ div
         }
 
         marker.addTo(window.newMap);
+      },
+      changeFavoriteState (id, oldstate) {
+        let newstate = oldstate === false || oldstate === 'false' ? true : false
+        let currentkey = "is_favorite"
+        // newRestaurantData[currentkey] = newstate
+        // console.log({currentkey})
+        this.$store.dispatch('updateRestaurantData', {id, currentkey, newstate})
+        this.$forceUpdate()
+        // console.log('[index.vue] changing state', id, key, newRestaurantData)
       }
     },
     mounted () {
