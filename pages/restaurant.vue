@@ -47,7 +47,7 @@ div
                 label
                   span.label-text Comments
                   textarea(id="reviewComment" rows="4" cols="30" v-model="yourcomment")
-              button(id="btnSaveReview") Save Review
+              button(id="btnSaveReview" @click="saveReview(currentRestaurant.id)") Save Review
         transition-group#reviews-list(tag="ul" name="pagetran" mode="out-in")
           li(v-for="(review, key) in currentRestaurant.reviews" :key="key" v-if="currentRestaurant.reviews")
             p.restaurant-review-user {{review.name}}
@@ -92,6 +92,23 @@ div
       }
     },
     methods: {
+      saveReview (id) {
+        let currentkey = 'reviews'
+        let newstate = {
+          restaurant_id: id,
+          name: this.yourname,
+          rating: this.yourrating,
+          comments: this.yourcomment,
+          createdAt: Date.now()
+        }
+        // console.log('Save!', {id, currentkey, newstate})
+        this.$store.dispatch('updateRestaurantData', {id, currentkey, newstate})
+        // this.$forceUpdate()
+        this.yourcomment = ''
+        this.yourname = ''
+        this.yourrating = 5
+        this.leavingReview = false
+      },
       lazyLoadImgs () {
         let imgDefer = document.getElementsByTagName('img')
         setTimeout(function(){

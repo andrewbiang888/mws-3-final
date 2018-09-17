@@ -172,7 +172,7 @@ export default {
     isLoading () {
       self = this
       setTimeout(() => {
-        console.log('Watcher is loading')
+        // console.log('Watcher is fired')
         self.init()
       }, 1000);
     }

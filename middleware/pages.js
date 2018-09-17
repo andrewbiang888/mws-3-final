@@ -17,13 +17,10 @@ let dbPromise = idb.open('restaurant-db', 1, (upgradeDb) => {
 })
 
 
-export default function(context) {
-  // go tell the store to update the page name
-  let returnedRoute = context.query.id ? context.query.id : context.route.name
-  let currentPage = context.store.state.restaurants
-  // TODO: Check to see if data exists in idb pending. If so check for interent connection. if interent connection, save data on database
-
-  // TODO: 2 update live data? Delete restaurant idb?
+let nextPending = () => {
+  attemptPending(nextPending)
+}
+function attemptPending (callback) {
   dbPromise.then( db => {
     //Check to see if any db exists, if not exit
     if (!db || !db.objectStoreNames.length) {
@@ -32,20 +29,23 @@ export default function(context) {
       return
     }
     const tx = db.transaction("pending", "readwrite")
+
     tx.objectStore("pending").openCursor().then( cursor => {
-      console.log('[PLUGIN PAGES] Opening pending idb')
-      if (!cursor) {
+      console.log('[MIDDLEWARE PAGES] Opening pending idb', cursor.value)
+      if (!cursor || !cursor.value) {
+        console.log('%c [MIDDLEWARE PAGES] Opening pending no cursor', 'background-color: red;', 'this is chill if you did not save anything in pending')
         return;
       }
       // const value = cursor.value;
-      url = cursor.value.data.url;
-      method = cursor.value.data.method;
-      body = cursor.value.data.body;
-
+      let url = cursor.value.data.url;
+      let method = cursor.value.data.method;
+      let body = cursor.value.data.body;
+      console.log('%c [MIDDLEWARE]', 'background: blue;', {url, method, body})
       // If we don't have a parameter then we're on a bad record that should be tossed
       // and then move on
       if ((!url || !method) || (method === "POST" && !body)) {
-        cursor.delete()
+        console.log('%c [MIDDLEWARE PAGES] Opening pending no cursor', 'background-color: red;')
+        cursor.delete().then(callback())
         return;
       };
 
@@ -64,8 +64,9 @@ export default function(context) {
             // Success! Delete the item from the pending queue
           const deltx = db.transaction("pending", "readwrite");
           deltx.objectStore("pending").openCursor().then(cursor => {
+            console.log(cursor)
             cursor.delete().then(() => {
-              return
+              callback()
             })
           })
           console.log("deleted pending item from queue")
@@ -76,12 +77,18 @@ export default function(context) {
       }
     })
     .catch(error => {
-      console.log("Error reading cursor");
+      console.log("Error reading cursor", error);
       return;
     })
 
   })
+}
 
+export default function(context) {
+  let returnedRoute = context.query.id ? context.query.id : context.route.name
+  let currentPage = context.store.state.restaurants
+  // go tell the store to update the page name
+  nextPending()
   console.log('[MIDDLEWARE] current page is', currentPage)
   context.store.commit('setPage', returnedRoute)
 }
