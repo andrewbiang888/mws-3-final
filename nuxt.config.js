@@ -17,6 +17,7 @@ module.exports = {
       { src: 'https://unpkg.com/leaflet@1.3.1/dist/leaflet.js', integrity: 'sha512-/Nsx9X4HebavoBvEBuyp3I7od5tA0UzAxs+j83KgC8PU0kgB4XiK4Lfe4y4cgBtaRJQEIFCW+oC506aPT2L1zw==', crossorigin: '', defer: ''}
     ]
   },
+  mode: 'ssr',
   modules: [
     '@nuxtjs/pwa',
   ],
@@ -41,6 +42,8 @@ module.exports = {
     importScripts: [
         'test-sw.js'
     ],
+    skipWaiting: true,
+    cachingExtensions: 'http://localhost:3333/restaurant',
     runtimeCaching: [
       {
         // To match cross-origin requests, use a RegExp that matches
@@ -74,6 +77,20 @@ module.exports = {
       }
     ]
   },
+  manifest: {
+    "icons": [
+      {
+        "src": "/rrlogo-192.png",
+        "type": "image/png",
+        "sizes": "192x192"
+      },
+      {
+        "src": "/rrlogo-512.png",
+        "type": "image/png",
+        "sizes": "512x512"
+      }
+    ],
+  },
   /*
   ** Customize the progress bar color
   */
@@ -85,6 +102,13 @@ module.exports = {
     /*
     ** Run ESLint on save
     */
+    optimization: {
+      splitChunks: {
+        layouts: false,
+        pages: true,
+        commons: true
+      }
+    },
     extend (config, { isDev, isClient }) {
       if (isDev && isClient) {
         config.module.rules.push({

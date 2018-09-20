@@ -31,7 +31,8 @@ main#maincontent
                 button(:id="'favorite-icon' + restaurant.id" @click="changeFavoriteState(restaurant.id, restaurant.is_favorite)" v-if="restaurant.is_favorite === false || restaurant.is_favorite === 'false'" style="background: url('/img/icons/fav-icon.svg') no-repeat;") {{restaurant.name}} is not a favorite
               p {{restaurant.neighborhood}}
               p {{restaurant.address}}
-              nuxt-link.view-more-btn(:to="'/restaurant?id=' + restaurant.id") View Details
+              a.view-more-btn(:href="'/restaurant?id=' + restaurant.id") View Details
+              //- nuxt-link.view-more-btn(:to="'/restaurant?id=' + restaurant.id") View Details
 </template>
 
 <script>
