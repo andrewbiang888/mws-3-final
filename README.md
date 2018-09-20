@@ -5,7 +5,10 @@
 ## How to Set up for testing
 
 First, download and set up the [mws-restaurant-stage-3 server](https://github.com/udacity/mws-restaurant-stage-3).
+
 _Remember to start the server_ 😉
+
+Then download this repository and . . .
 
 ``` bash
 # install dependencies
