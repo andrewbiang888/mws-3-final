@@ -11,10 +11,10 @@ module.exports = {
     ],
     link: [
       { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
-      { rel: 'stylesheet', href: 'https://unpkg.com/leaflet@1.3.1/dist/leaflet.css', integrity: 'sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh7cOI1bkDwLqdLw3Zg0cRJAAQ==', crossorigin: '' }
+      { rel: 'stylesheet', href: 'https://unpkg.com/leaflet@1.3.1/dist/leaflet.css', integrity: 'sha512-Rksm5RenBEKSKFjgI3a41vrjkw4EVPlJ3+OiI65vTjIdo9brlAacEuKOiQ5OFh7cOI1bkDwLqdLw3Zg0cRJAAQ==', crossorigin: '', defer: '' }
     ],
     script: [
-      { src: 'https://unpkg.com/leaflet@1.3.1/dist/leaflet.js', integrity: 'sha512-/Nsx9X4HebavoBvEBuyp3I7od5tA0UzAxs+j83KgC8PU0kgB4XiK4Lfe4y4cgBtaRJQEIFCW+oC506aPT2L1zw==', crossorigin: ''}
+      { src: 'https://unpkg.com/leaflet@1.3.1/dist/leaflet.js', integrity: 'sha512-/Nsx9X4HebavoBvEBuyp3I7od5tA0UzAxs+j83KgC8PU0kgB4XiK4Lfe4y4cgBtaRJQEIFCW+oC506aPT2L1zw==', crossorigin: '', defer: ''}
     ]
   },
   modules: [
@@ -46,7 +46,7 @@ module.exports = {
         // To match cross-origin requests, use a RegExp that matches
         // the start of the origin:
         urlPattern: new RegExp('^http://localhost:1337/.*'),
-        // handler: 'datafromserver',
+        handler: 'cacheFirst',
         strategyOptions: {
           cacheableResponse: {
             statuses: [0, 200]
@@ -54,8 +54,9 @@ module.exports = {
         }
       },
       {
-        urlPattern: new RegExp('^https://api.tiles.mapbox.com/.*'),
-        // handler: 'mapimgdata',
+        urlPattern: new RegExp('^https:\/\/api\.tiles\.mapbox\.com\/.*'),
+        handler: 'cacheFirst',
+        method: 'GET',
         strategyOptions: {
           cacheableResponse: {
             statuses: [0, 200]

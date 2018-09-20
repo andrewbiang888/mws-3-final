@@ -42,11 +42,59 @@ export const actions = {
   async setRestaurants ({commit}, existingData) {
 
     let restaurantData = existingData
+    console.log('Setting Restaurant Data from Vue Action', existingData, restaurantData)
     commit('setRestaurants', restaurantData)
   },
   async setPage ({commit}, newpage) {
 
     commit('setPage', newpage)
+  },
+  async setRestaurantReviews ({commit, state}, {id, currentkey, reviews}) {
+    let prevRestaurants = state.restaurants;
+    let arr = await dbPromise.then( async db => {
+
+      return db.transaction("pending", "readwrite").objectStore("pending").getAll().then( async pendingItems => {
+        let newReviews = await reviews
+        pendingItems.forEach( pendingItem => {
+          if (pendingItem.data.body != undefined) {
+            console.log('Pushing to reviews', pendingItem.data.body, newReviews)
+            newReviews.push(pendingItem.data.body)
+          } else if (pendingItem.data.body === undefined && pendingItem.data.method === 'PUT') {
+            let idd = pendingItem.data.url.split('?')[0].split('restaurants/')[1]
+            idd = parseInt(idd)
+            let isFav = pendingItem.data.url.split('?')[1].split('=')[1]
+            prevRestaurants.find( restaurant => restaurant.id === idd ? restaurant.is_favorite = isFav : null  )
+            console.log('yep, right here. It\'s a like', idd, isFav)
+          } else {
+            console.log('not doing it')
+          }
+        })
+        return newReviews
+      })
+    }).then( async data => {
+      console.log({data})
+      return await prevRestaurants.map( obj => {
+        if (obj.id == id) {
+          obj.reviews = data
+        }
+        return obj
+      })
+    })
+
+    // let arr2 = state.restaurants.map( obj => {
+    //   if (obj.id == id) {
+    //     obj.reviews = reviews
+    //   }
+    //   return obj
+    // })
+    dbPromise.then( db => {
+      console.log('saving to idb', {arr})
+      const tx = db.transaction("restaurants", "readwrite").objectStore("restaurants").put({
+        id: 'all',
+        data: arr
+      })
+    })
+    commit('setRestaurantReviews', arr)
   },
   async updateRestaurantData ({commit, state}, {id, currentkey, newstate}) {
     console.log({id, currentkey, newstate})
@@ -70,15 +118,16 @@ export const actions = {
       Array.isArray(newRestaurantData[currentkey]) ? console.log('Reviews exist!') : newRestaurantData[currentkey] = []
       newRestaurantData[currentkey].push({
         name: newstate.name,
-        date: todaysDate(newstate.createdAt),
+        restaurant_id: id,
         rating: newstate.rating,
-        comments: newstate.comments
+        comments: newstate.comments,
+        createdAt: newstate.createdAt
       })
       console.log({newRestaurantData})
     }
 
     //Check data to see if it fits expected
-    if(id && currentkey && newstate != null && typeof newstate != 'object') {
+    if(id && currentkey && newstate != null) {
       // if passes, see if there is internet
       if (navigator.onLine) {
         // if online, save in database. if successful, save in global store.
@@ -92,7 +141,7 @@ export const actions = {
             return;
           }
         }).then( () => {
-          if (currentkey === 'is_favorite') {
+          // if (currentkey === 'is_favorite') {
             console.log(`%c [STORE IDB] updating idb with new data in global store`, 'background-color: green;')
             dbPromise.then( db => {
               let arr = state.restaurants.map( obj => obj.id == id ? newRestaurantData : obj)
@@ -103,12 +152,12 @@ export const actions = {
             })
             commit('updateRestaurantData', {id, newRestaurantData})
             return
-          } else if (currentkey === 'reviews') {
+          // } else if (currentkey === 'reviews') {
 
-          }
+          // }
         })
       } else {
-        if (currentkey === 'is_favorite') {
+        // if (currentkey === 'is_favorite') {
           console.log('%c [STORE WARNING] Not connected to the Internet. Saving to idb', 'background-color: yellow; padding: 5px;')
           dbPromise.then( db => {
             const tx = db.transaction("pending", "readwrite").objectStore('pending')
@@ -125,9 +174,9 @@ export const actions = {
               return
             }).catch( error => console.log('%c [STORE ERROR] saving to idb pending', 'background-color: red; padding: 5px;'))
           }).catch( error => console.log('%c [STORE ERROR] could not connect to idb pending', 'background-color: red; padding: 5px;'))
-        } else if (currentkey === 'reviews') {
+        // } else if (currentkey === 'reviews') {
 
-        }
+        // }
       }
 
     } else {
@@ -155,6 +204,9 @@ export const mutations = {
   },
   setPage(state, newpage) {
     state.page = newpage
+  },
+  setRestaurantReviews(state, arr) {
+    state.restaurants = [...arr]
   },
   updateRestaurantData(state, {id, newRestaurantData}) {
     console.log('[STORE MUTATION] Updating restaurants')

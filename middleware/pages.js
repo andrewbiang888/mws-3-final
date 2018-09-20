@@ -31,11 +31,11 @@ function attemptPending (callback) {
     const tx = db.transaction("pending", "readwrite")
 
     tx.objectStore("pending").openCursor().then( cursor => {
-      console.log('[MIDDLEWARE PAGES] Opening pending idb', cursor.value)
       if (!cursor || !cursor.value) {
         console.log('%c [MIDDLEWARE PAGES] Opening pending no cursor', 'background-color: red;', 'this is chill if you did not save anything in pending')
         return;
       }
+      console.log('[MIDDLEWARE PAGES] Opening pending idb', cursor.value)
       // const value = cursor.value;
       let url = cursor.value.data.url;
       let method = cursor.value.data.method;
@@ -68,8 +68,34 @@ function attemptPending (callback) {
             cursor.delete().then(() => {
               callback()
             })
+          }).then( () => {
+            //TODO: refetch all restaurant data and update idb
+            fetch(process.env.SERVERURL + 'restaurants', {method: "GET"}).then( response => response.json().then( async restaurants => {
+              let returnedRestaurantData = await restaurants
+              // returnedRestaurantData = await restaurants.filter( async restaurant => {
+              //   let url2 = 'http://localhost:1337/reviews/?restaurant_id=' + restaurant.id
+              //   let reviews = await fetch(url2, {method: "GET"}).then( response => {
+              //     if (!response.clone().ok && !response.clone().redirected) {
+              //       throw "No reviews available";
+              //     }
+              //     return response.json()
+              //   })
+              //   // console.log({reviews})
+              //   // console.log({restaurant})
+              //   restaurant.reviews = await reviews
+              // })
+              dbPromise.then( dbb => {
+                dbb.transaction("restaurants", "readwrite").objectStore("restaurants").put({
+                  id: 'all',
+                  data: returnedRestaurantData
+                })
+              }).catch(error => {
+                console.log('%c' + error, 'background: red;')
+              })
+              console.log(`%c  [MIDDLEWARE] RE-Fetch`, 'background: green; color: white; padding: 10px;', returnedRestaurantData)
+            }))
+            console.log("deleted pending item from queue")
           })
-          console.log("deleted pending item from queue")
         })
       } else {
         console.log('[MIDDLEWARE] Not online, data left in idb pending')
@@ -89,6 +115,6 @@ export default function(context) {
   let currentPage = context.store.state.restaurants
   // go tell the store to update the page name
   nextPending()
-  console.log('[MIDDLEWARE] current page is', currentPage)
+  // console.log('[MIDDLEWARE] current page is', currentPage)
   context.store.commit('setPage', returnedRoute)
 }

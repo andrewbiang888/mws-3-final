@@ -29,6 +29,8 @@ div
         transition(name="pagetran" mode="out-in")
           div(v-if="leavingReview")
             p Leave a review for this restaurant below
+            transition(name="pagetran" mode="out-in")
+              p(v-if="errmessage" style="color: red; font-weight: 900;") {{errmessage}}
             div.review-entry
               div
                 label
@@ -51,11 +53,11 @@ div
         transition-group#reviews-list(tag="ul" name="pagetran" mode="out-in")
           li(v-for="(review, key) in currentRestaurant.reviews" :key="key" v-if="currentRestaurant.reviews")
             p.restaurant-review-user {{review.name}}
-            p {{review.date}}
+            p {{todaysDate(review.createdAt)}}
             p Rating: {{review.rating}}
             p {{review.comments}}
           li(v-if="!currentRestaurant.reviews" key="noreviews")
-            p No reviews yet for this item
+            p No reviews yet for this item or not connected to the Internet
     div(v-else key="withoutdata")
 </template>
 <script>
@@ -66,7 +68,8 @@ div
         leavingReview: false,
         yourname: '',
         yourrating: 5,
-        yourcomment: ''
+        yourcomment: '',
+        errmessage: ''
       }
     },
     computed: {
@@ -80,18 +83,18 @@ div
           currentRestaurant = self.$store.state.restaurants.filter( restaurant => restaurant.id == self.$store.state.page)[0]
         }
         return currentRestaurant
-      },
-      todaysDate () {
-        let monthNames = ["January", "February", "March", "April", "May", "June",
-          "July", "August", "September", "October", "November", "December"
-        ];
-        let d = new Date()
-        let day = d.getDate()
-        let year = d.getFullYear()
-        return monthNames[d.getMonth()] + ' ' + day + ', ' + year
       }
     },
     methods: {
+      todaysDate (d) {
+        let monthNames = ["January", "February", "March", "April", "May", "June",
+          "July", "August", "September", "October", "November", "December"
+        ];
+        d = new Date(d)
+        let day = d.getDate()
+        let year = d.getFullYear()
+        return monthNames[d.getMonth()] + ' ' + day + ', ' + year
+      },
       saveReview (id) {
         let currentkey = 'reviews'
         let newstate = {
@@ -102,12 +105,18 @@ div
           createdAt: Date.now()
         }
         // console.log('Save!', {id, currentkey, newstate})
-        this.$store.dispatch('updateRestaurantData', {id, currentkey, newstate})
-        // this.$forceUpdate()
-        this.yourcomment = ''
-        this.yourname = ''
-        this.yourrating = 5
-        this.leavingReview = false
+        if (id && currentkey && this.yourname && this.yourrating && this.yourcomment) {
+          this.$store.dispatch('updateRestaurantData', {id, currentkey, newstate}).then( () => this.$forceUpdate())
+          // this.$forceUpdate()
+          this.yourcomment = ''
+          this.yourname = ''
+          this.yourrating = 5
+          this.leavingReview = false
+          this.errmessage = ''
+        } else {
+          this.errmessage = this.yourname === '' ? 'What is your name?' : this.yourcomment === '' ? 'Leave a comment!' : 'There was an error. Try again!'
+          console.log('fill out the form!', id, currentkey, this.yourname, this.yourrating, this.yourcomment)
+        }
       },
       lazyLoadImgs () {
         let imgDefer = document.getElementsByTagName('img')
@@ -157,9 +166,20 @@ div
         let currentkey = "is_favorite"
         // newRestaurantData[currentkey] = newstate
         // console.log({currentkey})
-        this.$store.dispatch('updateRestaurantData', {id, currentkey, newstate})
-        this.$forceUpdate()
+        this.$store.dispatch('updateRestaurantData', {id, currentkey, newstate}).then( () => this.$forceUpdate())
         // console.log('[index.vue] changing state', id, key, newRestaurantData)
+      },
+      async getReviews () {
+        let id = this.currentRestaurant.id
+        let url = 'http://localhost:1337/reviews/?restaurant_id=' + id
+        let reviews = await fetch(url, {method: "GET"}).then( response => {
+          if (!response.clone().ok && !response.clone().redirected) {
+            throw "No reviews available";
+          }
+          return response.json();
+        })
+        let currentkey = "reviews"
+        this.$store.dispatch('setRestaurantReviews', {id, currentkey, reviews}).then( () => this.$forceUpdate())
       }
     },
     mounted () {
@@ -173,6 +193,7 @@ div
       } else {
         this.addMarkersToMap()
       }
+      this.getReviews()
     }
   }
 </script>

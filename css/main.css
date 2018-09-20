@@ -437,7 +437,7 @@ nav {
   text-align: left;
 }
 #breadcrumb li:last-of-type a {
-  color: #666;
+  color: #3c2000;
   text-decoration-line: none;
 }
 h1, h2, h3 {
@@ -470,6 +470,9 @@ section#restaurant-address-and-hours {
 }
 section#restaurant-address-and-hours .favorite-icon {
   position: unset;
+}
+.nuxt-link-active {
+
 }
 
 /***
